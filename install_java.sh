@@ -1,9 +1,9 @@
 #!/bin/bash
 #
 #################################################
-#		            Elaborado por:                  #
-#	      Mauro Augusto Soares Rodrigues		      #
-#		                  v3.0                			#
+#		Elaborado por:			#
+#	Mauro Augusto Soares Rodrigues		#
+#		      v3.0			#
 #################################################
 #
 # Script para instalacao do java jre ou jdk
