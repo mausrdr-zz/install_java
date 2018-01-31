@@ -3,7 +3,7 @@
 #################################################
 #                 Elaborado por:                #
 #         Mauro Augusto Soares Rodrigues        #
-#                      v4.0                     #
+#                      v4.1                     #
 #################################################
 #
 # Script para instalacao do java jre ou jdk
@@ -60,15 +60,17 @@ function remove_previous() {
 		else
 			if [[ $amount_jdk -eq 1 ]]; then
 				older_java=$(ls /usr/java | grep jdk | cut -d '' -f1)
-				update-alternatives --remove java /usr/java/$older_java/jre/bin/java;
-				update-alternatives --remove javaws /usr/java/$older_java/jre/bin/javaws;
+				update-alternatives --remove java /usr/java/$older_java/bin/java;
+				update-alternatives --remove javac /usr/java/$older_java/bin/javac;
+				update-alternatives --remove javaws /usr/java/$older_java/bin/javaws;
 				rm -rfv /usr/java/$older_java;
 			else
 				older_java=$(ls /usr/java | grep jdk | cut -d '' -f1)
 				echo $older_java > older_java_jdk.db;
 				while read entry_older_jdk; do
-					update-alternatives --remove java /usr/java/$entry_older_jdk/jre/bin/java;
-					update-alternatives --remove javaws /usr/java/$entry_older_jdk/jre/bin/javaws;
+					update-alternatives --remove java /usr/java/$entry_older_jdk/bin/java;
+					update-alternatives --remove javac /usr/java/$entry_older_jdk/bin/javac;
+					update-alternatives --remove javaws /usr/java/$entry_older_jdk/bin/javaws;
 					rm -rfv /usr/java/$entry_older_jdk;
 				done < /root/older_java_jdk.db
 			fi
@@ -83,7 +85,7 @@ function get_package() {
 		for (( i = 1; i < 1000; i++ )); do
 			link_url=`grep  ">JRE" javalink | tr -s " " | tr -d \" | sed '/>JRE/!d' | cut -d= -f$i | cut -d" " -f1`
 			if [[ ${link_url,,} =~ $jdk_str ]]; then
-				curl -fLC - --retry 3 --retry-delay 3 -b oraclelicense=a -o javalinkdown $link_url
+				curl -fLC - --retry 3 --retry-delay 3 -b oraclelicense=a -o javalinkdown http://www.oracle.com/$link_url
 				down_url=`grep "\['$1-$2_linux-x64_bin.tar.gz'\]" javalinkdown | tr -d \" | cut -d: -f4,5 | cut -d, -f1`
 				wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" $down_url
 				break
@@ -91,12 +93,11 @@ function get_package() {
 		done
 	else
 		jre_str="jre9-downloads"
-		for (( i = 0; i < 10; i++ )); do
-			#statements
+		jre_not_str="server-jre9-downloads"
+		for (( i = 1; i < 1000; i++ )); do
 			link_url=`grep  ">JRE" javalink | tr -s " " | tr -d \" | sed '/>JRE/!d' | cut -d= -f$i | cut -d" " -f1`
-			if [[ ${link_url,,} =~ $jre_str ]]; then
-				#statements
-				curl -fLC - --retry 3 --retry-delay 3 -b oraclelicense=a -o javalinkdown $link_url
+			if [[ ${link_url,,} =~ $jre_str && ! ${link_url,,} =~ $jre_not_str ]]; then
+				curl -fLC - --retry 3 --retry-delay 3 -b oraclelicense=a -o javalinkdown http://www.oracle.com/$link_url
 				down_url=`grep "\['$1-$2_linux-x64_bin.tar.gz'\]" javalinkdown | tr -d \" | cut -d: -f4,5 | cut -d, -f1`
 				wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" $down_url
 				break
@@ -111,23 +112,25 @@ function install_java() {
 			if [[ $3 -eq 1 ]]; then
 				remove_previous;
 			fi
-			mv $1$2 /usr/java;
-			chown root:root -R /usr/java/$1$2;
-			update-alternatives --install /usr/bin/java java /usr/java/$1$2/bin/java 10;
-			update-alternatives --install /usr/bin/javaws javaws /usr/java/$1$2/bin/javaws 10;
-			update-alternatives --set java /usr/java/$1$2/bin/java;
-			update-alternatives --set javaws /usr/java/$1$2/bin/javaws;
+			mv $1-$2 /usr/java;
+			chown root:root -R /usr/java/$1-$2;
+			update-alternatives --install /usr/bin/java java /usr/java/$1-$2/bin/java 10;
+			update-alternatives --install /usr/bin/javaws javaws /usr/java/$1-$2/bin/javaws 10;
+			update-alternatives --set java /usr/java/$1-$2/bin/java;
+			update-alternatives --set javaws /usr/java/$1-$2/bin/javaws;
 			;;
 		jdk)
 			if [[ $3 -eq 1 ]]; then
 				remove_previous;
 			fi
-			mv $1$2 /usr/java;
-			chown root:root -R /usr/java/$1$2;
-			update-alternatives --install /usr/bin/java java /usr/java/$1$2/jre/bin/java 10;
-			update-alternatives --install /usr/bin/javaws javaws /usr/java/$1$2/jre/bin/javaws 10;
-			update-alternatives --set java /usr/java/$1$2/jre/bin/java;
-			update-alternatives --set javaws /usr/java/$1$2/jre/bin/javaws;
+			mv $1-$2 /usr/java;
+			chown root:root -R /usr/java/$1-$2;
+			update-alternatives --install /usr/bin/java java /usr/java/$1-$2/bin/java 10;
+			update-alternatives --install /usr/bin/javac javac /usr/java/$1-$2/bin/javac 10;
+			update-alternatives --install /usr/bin/javaws javaws /usr/java/$1-$2/bin/javaws 10;
+			update-alternatives --set java /usr/java/$1-$2/bin/java;
+			update-alternatives --set javac /usr/java/$1-$2/bin/javac;
+			update-alternatives --set javaws /usr/java/$1-$2/bin/javaws;
 			;;
 	esac
 }
@@ -137,16 +140,9 @@ function set_env_variables() {
 	echo "# Environment Variable of Oracle Java installed by" >> /etc/profile;
 	echo "# script install_java_ubuntu_server.sh placed on" >> /etc/profile;
 	echo "# /root directory." >> /etc/profile;
-	echo "JAVA_HOME=/usr/java/$1$2" >> /etc/profile;
-	if [[ $1 == jdk ]]; then
-	  echo "JRE_HOME=/usr/java/$1$2/jre" >> /etc/profile;
-	  echo "PATH=\$PATH:\$JAVA_HOME/bin:\$JRE_HOME/bin" >> /etc/profile;
-	else
-	  echo "JRE_HOME=/usr/java/$1$2/bin" >> /etc/profile;
-	  echo "PATH=\$PATH:\$JAVA_HOME:\$JRE_HOME" >> /etc/profile;
-	fi
+	echo "JAVA_HOME=/usr/java/$1-$2/" >> /etc/profile;
+	echo "PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile;
 	echo "export JAVA_HOME" >> /etc/profile;
-	echo "export JRE_HOME" >> /etc/profile;
 	echo "export PATH" >> /etc/profile;
 }
 
