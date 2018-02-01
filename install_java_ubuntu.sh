@@ -3,14 +3,13 @@
 #################################################
 #                 Elaborado por:                #
 #         Mauro Augusto Soares Rodrigues        #
-#                      v4.1                     #
+#                      v4.2                     #
 #################################################
 #
 # Script para instalacao do java jre ou jdk
-# Para executar utilize o seguinte comando: ./install_java_ubuntu_server.sh num_vresao plataforma
-# num_versao e a versao corrente do java.
-# E plataforma indicara se sera instalado jre ou jdk
-# Ex.: ./install_java_ubuntu_server.sh 9.0.4 jre
+# Para executar utilize o seguinte comando: ./install_java_ubuntu_server.sh plataforma
+# Plataforma indicara se sera instalado jre ou jdk
+# Ex.: ./install_java_ubuntu_server.sh jre
 
 function init_reset_db_files() {
 	if [[ -e /root/older_java_jre.db ]]; then
@@ -86,7 +85,7 @@ function get_package() {
 			link_url=`grep  ">JRE" javalink | tr -s " " | tr -d \" | sed '/>JRE/!d' | cut -d= -f$i | cut -d" " -f1`
 			if [[ ${link_url,,} =~ $jdk_str ]]; then
 				curl -fLC - --retry 3 --retry-delay 3 -b oraclelicense=a -o javalinkdown http://www.oracle.com/$link_url
-				down_url=`grep "\['$1-$2_linux-x64_bin.tar.gz'\]" javalinkdown | tr -d \" | cut -d: -f4,5 | cut -d, -f1`
+				down_url=`grep "linux-x64_bin.tar.gz'\]" javalinkdown | tr -d \" | cut -d: -f4,5 | cut -d, -f1`
 				wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" $down_url
 				break
 			fi
@@ -98,7 +97,7 @@ function get_package() {
 			link_url=`grep  ">JRE" javalink | tr -s " " | tr -d \" | sed '/>JRE/!d' | cut -d= -f$i | cut -d" " -f1`
 			if [[ ${link_url,,} =~ $jre_str && ! ${link_url,,} =~ $jre_not_str ]]; then
 				curl -fLC - --retry 3 --retry-delay 3 -b oraclelicense=a -o javalinkdown http://www.oracle.com/$link_url
-				down_url=`grep "\['$1-$2_linux-x64_bin.tar.gz'\]" javalinkdown | tr -d \" | cut -d: -f4,5 | cut -d, -f1`
+				down_url=`grep "linux-x64_bin.tar.gz'\]" javalinkdown | tr -d \" | cut -d: -f4,5 | cut -d, -f1`
 				wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" $down_url
 				break
 			fi
@@ -150,19 +149,19 @@ init_reset_profile
 init_reset_db_files
 init_reset_javalink_files
 
-get_package $2 $1
-tar -zxvf $2-$1_linux-x64_bin.tar.gz;
-rm -rfv $2-$1_linux-x64_bin.tar.gz;
-
+get_package $1
+num_version=`ls | grep jre | cut -d- -f2 | cut -d_ -f1`
+tar -zxvf $1-${num_version}_linux-x64_bin.tar.gz;
+rm -rfv $1-${num_version}_linux-x64_bin.tar.gz;
 
 if [[ -d /usr/java ]]; then
-	install_java $2 $1 1
+	install_java $1 $num_version 1
 else
   mkdir /usr/java;
-  install_java $2 $1
+  install_java $1 $num_version
 fi
 
-set_env_variables $2 $1
+set_env_variables $1 $num_version
 . /etc/profile;
 clear;
 java -version;
