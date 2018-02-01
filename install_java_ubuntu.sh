@@ -3,7 +3,7 @@
 #################################################
 #                 Elaborado por:                #
 #         Mauro Augusto Soares Rodrigues        #
-#                      v4.2                     #
+#                      v4.3                     #
 #################################################
 #
 # Script para instalacao do java jre ou jdk
@@ -82,7 +82,7 @@ function get_package() {
 	if [[ $1 == jdk ]]; then
 		jdk_str="jdk9-downloads"
 		for (( i = 1; i < 1000; i++ )); do
-			link_url=`grep  ">JRE" javalink | tr -s " " | tr -d \" | sed '/>JRE/!d' | cut -d= -f$i | cut -d" " -f1`
+			link_url=`grep  ">JRE" javalink | tr -s " " | tr -d \" | sed '/>JRE/!d' | cut -d= -f$i | cut -d">" -f1`
 			if [[ ${link_url,,} =~ $jdk_str ]]; then
 				curl -fLC - --retry 3 --retry-delay 3 -b oraclelicense=a -o javalinkdown http://www.oracle.com/$link_url
 				down_url=`grep "linux-x64_bin.tar.gz'\]" javalinkdown | tr -d \" | cut -d: -f4,5 | cut -d, -f1`
@@ -150,7 +150,7 @@ init_reset_db_files
 init_reset_javalink_files
 
 get_package $1
-num_version=`ls | grep jre | cut -d- -f2 | cut -d_ -f1`
+num_version=`ls | grep $1 | cut -d- -f2 | cut -d_ -f1`
 tar -zxvf $1-${num_version}_linux-x64_bin.tar.gz;
 rm -rfv $1-${num_version}_linux-x64_bin.tar.gz;
 
